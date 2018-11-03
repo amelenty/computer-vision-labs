@@ -14,6 +14,6 @@ Practice tasks for the Computer Vision course at Kyiv Polytechnic Institute
 
 ### Example
 
-![Colorful raccoon](example/img/img_from_webcam.png)
+![Colorful raccoon](lab0/example/img/img_from_webcam.png)
 
-![Colorless raccoon](example/img/img_grayscale.png)
+![Colorless raccoon](lab0/example/img/img_grayscale.png)
