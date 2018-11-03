@@ -1,6 +1,7 @@
 import cv2
 
 DATA_DIRECTORY = "resources/"
+OUTPUT_DIRECTORY = "output/"
 IMG_SHOW_DELAY_MS = 10000
 MAX_IMAGE_WIDTH = 800
 
@@ -17,7 +18,6 @@ def shrink_image(image):
 
 
 if __name__ == '__main__':
-
     cv2.startWindowThread()
     sift = cv2.xfeatures2d.SIFT_create()
 
@@ -37,5 +37,10 @@ if __name__ == '__main__':
     # You have to pass the output image to cv2.drawKeyPoints, also you have to declare it first.
     base_key_points = base_gray_small
     base_key_points = cv2.drawKeypoints(base_gray_small, key_points, base_key_points)
+    base_key_points_rich = base_gray_small
+    base_key_points_rich = cv2.drawKeypoints(base_gray_small, key_points, base_key_points_rich,
+                                             flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     cv2.imshow("Base with key points", base_key_points)
     cv2.waitKey(IMG_SHOW_DELAY_MS)
+    cv2.imwrite(OUTPUT_DIRECTORY + "base_key_points.jpg", base_key_points)
+    cv2.imwrite(OUTPUT_DIRECTORY + "base_key_points_rich.jpg", base_key_points_rich)
