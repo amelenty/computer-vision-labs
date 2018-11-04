@@ -1,7 +1,10 @@
 import cv2
 import numpy as np
+import csv
+import os
 import time
-from ada.metric import Metric
+import random
+from metric import Metric
 
 
 DATA_DIRECTORY = "resources/"
@@ -9,6 +12,7 @@ OUTPUT_DIRECTORY = "output/"
 IMG_SHOW_DELAY_MS = 10000
 MAX_IMAGE_WIDTH = 800
 MIN_MATCH_COUNT = 10
+IMAGE_SHOW_SAMPLING = 0.1
 
 
 # Resize image so that width is MAX_IMAGE_WIDTH or less, keep ratio
@@ -87,7 +91,16 @@ def process_test_image(image, name):
 
     match_img = cv2.drawMatches(image_gray_small, key_points, base_image, base_key_points, matches, None,
                                 matchesMask=matches_mask, flags=2)
-    cv2.imshow(name, match_img)
+    if random.uniform(0, 1) < IMAGE_SHOW_SAMPLING:
+        cv2.imshow(name, match_img)
+    cv2.imwrite(OUTPUT_DIRECTORY + "match_" + name, match_img)
+
+
+def save_metrics():
+    with open(OUTPUT_DIRECTORY + "metrics.csv", 'w', newline='') as csv_file:
+        writer = csv.DictWriter(csv_file, metrics[0].__dict__.keys())
+        writer.writeheader()
+        writer.writerows([metric.__dict__ for metric in metrics])
 
 
 if __name__ == '__main__':
@@ -97,12 +110,12 @@ if __name__ == '__main__':
     (base_image, base_key_points, base_descriptor) = process_base_image()
     (base_height, base_width) = base_image.shape[:2]
 
-    img_names = ['001+.jpg', '003-.jpg', '010+.jpg', '020+.jpg', '021-.jpg']
-
     metrics = []
 
-    for img_name in img_names:
+    for img_name in os.listdir(DATA_DIRECTORY):
         img = cv2.imread(DATA_DIRECTORY + img_name)
         process_test_image(img, img_name)
+
+    save_metrics()
 
     cv2.waitKey()

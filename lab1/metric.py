@@ -4,6 +4,6 @@ class Metric:
         self.img_name = img_name
         # will be either + or -
         self.object_present = img_name[3]
-        self.img_dimensions = img_dimensions
+        self.img_height, self.img_width = img_dimensions
         self.processing_time = processing_time
         self.matches_count = matches_count
