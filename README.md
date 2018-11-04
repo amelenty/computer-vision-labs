@@ -109,11 +109,11 @@ SIFT: ну хоч щось.
 
 BRISK:
 
-![Pepsi BRISK](lab1/output/ada/brisk/match_018+.jpg)
+![Pepsi BRISK](lab1/output/ada/brisk/match_017+.jpg)
 
 SIFT:
 
-![Pepsi SIFT](lab1/output/ada/sift/match_018+.jpg)
+![Pepsi SIFT](lab1/output/ada/sift/match_017+.jpg)
 
 Взагалі, навіть якщо на фото об'єкта нема, обидва алгоритми не здаються...
 
