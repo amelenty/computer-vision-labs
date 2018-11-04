@@ -1,9 +1,14 @@
 import cv2
+import numpy as np
+import time
+from ada.metric import Metric
+
 
 DATA_DIRECTORY = "resources/"
 OUTPUT_DIRECTORY = "output/"
 IMG_SHOW_DELAY_MS = 10000
 MAX_IMAGE_WIDTH = 800
+MIN_MATCH_COUNT = 10
 
 
 # Resize image so that width is MAX_IMAGE_WIDTH or less, keep ratio
@@ -43,16 +48,45 @@ def process_base_image():
     return base_gray_small, key_points, descriptor
 
 
+def detect_object(query_kp, train_kp, matches):
+    if len(matches) >= MIN_MATCH_COUNT:
+        src_pts = np.float32([query_kp[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
+        dst_pts = np.float32([train_kp[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        match_mask = mask.ravel().tolist()
+
+        return M, match_mask
+
+    else:
+        return None
+
+
 def process_test_image(image, name):
     image_gray_small = shrink_image(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+
+    time_start = time.perf_counter()
     key_points, descriptor = sift.detectAndCompute(image_gray_small, None)
+    time_stop = time.perf_counter()
 
     # I used L1 because they say that "L1 and L2 norms are preferable choices for SIFT and SURF descriptors".
     bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
 
     # Query goes first, train goes second. Same with cv2.drawMatches().
     matches = bf.match(descriptor, base_descriptor)
-    match_img = cv2.drawMatches(image_gray_small, key_points, base_image, base_key_points, matches, None)
+
+    metrics.append(Metric(name, image.shape[:2], time_stop - time_start, len(matches)))
+
+    M, matches_mask = detect_object(key_points, base_key_points, matches)
+
+    pts = np.float32([[0, 0], [0, base_height - 1], [base_width - 1, base_height - 1], [base_width - 1, 0]])\
+        .reshape(-1, 1, 2)
+    dst = cv2.perspectiveTransform(pts, M)
+
+    image_gray_small = cv2.polylines(image_gray_small, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+
+    match_img = cv2.drawMatches(image_gray_small, key_points, base_image, base_key_points, matches, None,
+                                matchesMask=matches_mask, flags=2)
     cv2.imshow(name, match_img)
 
 
@@ -61,8 +95,11 @@ if __name__ == '__main__':
     sift = cv2.xfeatures2d.SIFT_create()
 
     (base_image, base_key_points, base_descriptor) = process_base_image()
+    (base_height, base_width) = base_image.shape[:2]
 
     img_names = ['001+.jpg', '003-.jpg', '010+.jpg', '020+.jpg', '021-.jpg']
+
+    metrics = []
 
     for img_name in img_names:
         img = cv2.imread(DATA_DIRECTORY + img_name)
